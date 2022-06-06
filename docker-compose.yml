@@ -1,0 +1,13 @@
+version: '3'
+services:
+  db:
+    image: postgres:latest
+    container_name: sparkify
+    environment:
+      POSTGRES_DB: containerdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - 6543:5432 ## 5432:5432 does not work! 
+    volumes:
+      - ./database:/var/lib/postgresql/data

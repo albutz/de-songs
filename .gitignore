@@ -129,3 +129,4 @@ dmypy.json
 .pyre/
 project.code-workspace
 .vscode/
+database/
