@@ -8,6 +8,7 @@ authors = ["Alexander Butz <alex.butz@gmail.com>"]
 python = "^3.10"
 psycopg2 = "^2.9.3"
 python-on-whales = "^0.46.0"
+SQLAlchemy = "^1.4.37"
 
 [tool.poetry.dev-dependencies]
 pre-commit = "^2.19.0"
