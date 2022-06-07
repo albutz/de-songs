@@ -130,3 +130,5 @@ dmypy.json
 project.code-workspace
 .vscode/
 database/
+.DS_Store
+data/
