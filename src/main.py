@@ -3,10 +3,13 @@ import logging
 
 from python_on_whales import DockerClient
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
+from etl import run_etl_pipeline
+from orm_classes import mapper_reqistry
 from setup import Docker
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
 
@@ -21,3 +24,14 @@ if __name__ == "__main__":
         )
 
         logging.info("Engine created.")
+
+        # Create schema
+        with engine.begin() as connection:
+            mapper_reqistry.metadata.create_all(connection)
+
+        # ETL pipeline
+        Session = sessionmaker(bind=engine, future=True)
+        session = Session()
+        run_etl_pipeline(session)
+
+        engine.dispose()

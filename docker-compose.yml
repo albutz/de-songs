@@ -4,7 +4,7 @@ services:
     image: postgres:latest
     container_name: sparkify
     environment:
-      POSTGRES_DB: containerdb
+      POSTGRES_DB: sparkifydb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
     ports:

@@ -1,12 +1,11 @@
 """Functions to read local files."""
-from typing import List
 from pathlib import Path
-import h5py
-import pandas as pd
-import numpy as np
+from typing import List
 
-# TODO: update for execution in root directory
-data_dir = Path("..", "data")
+import h5py
+import numpy as np
+import pandas as pd
+
 
 def get_file_paths(data_dir: Path, pattern: str = "*.h5") -> List[Path]:
     """Recursive pattern matching in the data directory.
@@ -20,6 +19,7 @@ def get_file_paths(data_dir: Path, pattern: str = "*.h5") -> List[Path]:
     """
     return [file_path.resolve() for file_path in data_dir.rglob(pattern)]
 
+
 def read_h5(file_path: Path) -> pd.DataFrame:
     """Read a single h5 file and convert it to a DataFrame.
 
@@ -31,7 +31,7 @@ def read_h5(file_path: Path) -> pd.DataFrame:
     """
     df_list = []
     items = ["analysis/songs", "metadata/songs", "musicbrainz/songs"]
-    
+
     for item in items:
         with h5py.File(file_path, "r") as hf:
             df_list.append(pd.DataFrame(np.array(hf.get(item))))
