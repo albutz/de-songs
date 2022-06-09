@@ -23,14 +23,14 @@ if __name__ == "__main__":
 
         # Create schema if necessary
         inspector = inspect(engine)
-        if not all([tbl in inspector.get_table_names() for tbl in ["artists", "songs"]]):
+        if not all([tbl in inspector.get_table_names() for tbl in ["artists_init", "songs_init"]]):
             with engine.begin() as conn:
                 metadata.create_all(conn)
             logging.info("Schema created.")
         else:
             logging.info("Schema already exists.")
 
-        # ETL pipeline
+        # Initial pipeline
         run_initial_pipeline(engine)
         logging.info("Initial ETL pipeline successfully run.")
 
