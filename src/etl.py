@@ -1,14 +1,12 @@
 """ETL pipeline."""
 from pathlib import Path
-from typing import Any
 
-import numpy as np
-import pandas as pd
 from sqlalchemy.future.engine import Engine
 from tqdm import tqdm
 
 from read import get_file_paths, read_h5
 from tables import artist_table_init, song_table_init
+from utils import cast_numeric, encode_str
 
 
 def run_initial_pipeline(engine: Engine) -> None:
@@ -20,23 +18,6 @@ def run_initial_pipeline(engine: Engine) -> None:
         engine: Engine to connect to the database
     """
     file_paths = get_file_paths(Path("data"))
-
-    def get_scalar(ser: pd.Series) -> Any:
-        return ser.to_numpy()[0]
-
-    def encode_str(ser: pd.Series) -> str:
-        val = get_scalar(ser)
-        if isinstance(val, bytes):
-            val = val.decode("utf8")
-        return val
-
-    def cast_numeric(ser: pd.Series) -> int | float:
-        val = get_scalar(ser)
-        if isinstance(val, np.integer):
-            val = int(val)
-        elif isinstance(val, np.floating):
-            val = float(val)
-        return val
 
     for file_path in tqdm(file_paths):
 
