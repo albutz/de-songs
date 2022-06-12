@@ -23,7 +23,6 @@ def run_initial_pipeline(engine: Engine) -> None:
 
         # Load individual file
         song_df = read_h5(file_path)
-        song_df = song_df.apply(lambda ser: ser.where(~ser.isnull(), None))
 
         # Insert artist
         # fmt: off
