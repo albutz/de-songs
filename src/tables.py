@@ -14,6 +14,22 @@ artist_table_init = Table(
     Column("longitude", Numeric),
 )
 
+artist_table = Table(
+    "artists",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String, unique=True, nullable=False),
+)
+
+location_table = Table(
+    "locations",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("name", String, unique=True, nullable=False),
+    Column("latitude", Numeric),
+    Column("longitude", Numeric),
+)
+
 song_table_init = Table(
     "songs_init",
     metadata,

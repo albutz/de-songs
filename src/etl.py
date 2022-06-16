@@ -1,11 +1,12 @@
 """ETL pipeline."""
 from pathlib import Path
 
+from sqlalchemy import Column, select
 from sqlalchemy.future.engine import Engine
 from tqdm import tqdm
 
 from read import get_file_paths, read_h5
-from tables import artist_table_init, song_table_init
+from tables import artist_table, artist_table_init, location_table, song_table_init
 from utils import cast_numeric, encode_str
 
 
@@ -64,4 +65,76 @@ def run_initial_pipeline(engine: Engine) -> None:
 
         with engine.connect() as conn:
             conn.execute(insert_song_stmt)
+            conn.commit()
+
+
+def run_artist_pipeline(engine: Engine) -> None:
+    """Transform artists table.
+
+    Args:
+        engine: Engine to connect to the database
+    """
+    stmt = select(artist_table_init.c.name.distinct())
+
+    with engine.connect() as conn:
+        res = conn.execute(stmt)
+
+    artist_names = [row[0] for row in res.all()]
+
+    for artist_name in artist_names:
+        insert_artist_stmt = artist_table.insert().values(name=artist_name)
+
+        with engine.connect() as conn:
+            conn.execute(insert_artist_stmt)
+            conn.commit()
+
+
+def run_location_pipeline(engine: Engine) -> None:
+    """Locations table.
+
+    Insert values into the locations table.
+
+    Args:
+        engine: Engine to connect to the database
+    """
+    stmt = select(artist_table_init.c.location.distinct())
+
+    with engine.connect() as conn:
+        res = conn.execute(stmt)
+
+    locations = [row[0] for row in res.all()]
+
+    def get_lng_lat_val(col: Column, location: str) -> list | None:
+        """Helper to insert unique latitude and longitude values only.
+
+        Args:
+            col: Column object for latitude or longitude
+            location: Single location as a string
+
+        Returns:
+            Latitude or longitude value if it is unique for a location and else None.
+        """
+        stmt = select(col).where(artist_table_init.c.location == location)
+
+        with engine.connect() as conn:
+            res = conn.execute(stmt)
+
+        val = [row[0] for row in res.all()]
+        val = list(set(val))
+        insert_val = val[0] if len(val) == 1 else None
+
+        return insert_val
+
+    for location in locations:
+
+        if location is None:
+            continue
+
+        lat = get_lng_lat_val(artist_table_init.c.latitude, location)
+        lng = get_lng_lat_val(artist_table_init.c.longitude, location)
+
+        insert_loc_stmt = location_table.insert().values(name=location, latitude=lat, longitude=lng)
+
+        with engine.connect() as conn:
+            conn.execute(insert_loc_stmt)
             conn.commit()
