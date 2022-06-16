@@ -81,7 +81,7 @@ def run_artist_pipeline(engine: Engine) -> None:
 
     artist_names = [row[0] for row in res.all()]
 
-    for artist_name in artist_names:
+    for artist_name in tqdm(artist_names):
         insert_artist_stmt = artist_table.insert().values(name=artist_name)
 
         with engine.connect() as conn:
@@ -125,7 +125,7 @@ def run_location_pipeline(engine: Engine) -> None:
 
         return insert_val
 
-    for location in locations:
+    for location in tqdm(locations):
 
         if location is None:
             continue

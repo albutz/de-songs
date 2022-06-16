@@ -23,7 +23,7 @@ if __name__ == "__main__":
 
         # Create schema if necessary
         inspector = inspect(engine)
-        tbls = ["artists_init", "artists", "songs_init", "songs", "locations"]
+        tbls = ["artists_init", "artists", "songs_init", "songs", "locations", "artists_locations"]
         if not all([tbl in inspector.get_table_names() for tbl in tbls]):
             with engine.begin() as conn:
                 metadata.create_all(conn)
@@ -32,15 +32,19 @@ if __name__ == "__main__":
             logging.info("Schema already exists.")
 
         # Initial pipeline
+        logging.info("Starting initial pipeline...")
         run_initial_pipeline(engine)
-        logging.info("Initial ETL pipeline successfully run.")
+        logging.info("Initial ETL pipeline successfully run!")
 
         # Artists pipeline
+        logging.info("Starting pipeline to clean artists table...")
         run_artist_pipeline(engine)
-        logging.info("Artists table cleaned.")
+        logging.info("Artists table cleaned!")
 
+        # Locations pipeline
+        logging.info("Starting pipeline to clean locations table...")
         run_location_pipeline(engine)
-        logging.info("Locations table cleaned")
+        logging.info("Locations table cleaned!")
 
         engine.dispose()
 
