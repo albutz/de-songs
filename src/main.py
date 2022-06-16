@@ -4,7 +4,12 @@ import logging
 from python_on_whales import docker
 from sqlalchemy import create_engine, inspect
 
-from etl import run_artist_pipeline, run_initial_pipeline, run_location_pipeline
+from etl import (
+    run_artist_location_pipeline,
+    run_artist_pipeline,
+    run_initial_pipeline,
+    run_location_pipeline,
+)
 from tables import metadata
 
 logging.basicConfig(level=logging.INFO)
@@ -45,6 +50,11 @@ if __name__ == "__main__":
         logging.info("Starting pipeline to clean locations table...")
         run_location_pipeline(engine)
         logging.info("Locations table cleaned!")
+
+        # Artist-location mapping
+        logging.info("Starting pipeline for many-to-many mapping of artists and locations.")
+        run_artist_location_pipeline(engine)
+        logging.info("Mapping table created!")
 
         engine.dispose()
 

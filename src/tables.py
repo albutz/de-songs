@@ -1,6 +1,6 @@
 """Metadata / database schema."""
 
-from sqlalchemy import Column, Integer, MetaData, Numeric, String, Table
+from sqlalchemy import Column, ForeignKey, Integer, MetaData, Numeric, String, Table
 
 metadata = MetaData()
 
@@ -28,6 +28,14 @@ location_table = Table(
     Column("name", String, unique=True, nullable=False),
     Column("latitude", Numeric),
     Column("longitude", Numeric),
+)
+
+artist_location_table = Table(
+    "artists_locations",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("artist_id", Integer, ForeignKey("artists.id")),
+    Column("location_id", Integer, ForeignKey("locations.id")),
 )
 
 song_table_init = Table(

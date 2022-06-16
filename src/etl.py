@@ -6,7 +6,13 @@ from sqlalchemy.future.engine import Engine
 from tqdm import tqdm
 
 from read import get_file_paths, read_h5
-from tables import artist_table, artist_table_init, location_table, song_table_init
+from tables import (
+    artist_location_table,
+    artist_table,
+    artist_table_init,
+    location_table,
+    song_table_init,
+)
 from utils import cast_numeric, encode_str
 
 
@@ -137,4 +143,49 @@ def run_location_pipeline(engine: Engine) -> None:
 
         with engine.connect() as conn:
             conn.execute(insert_loc_stmt)
+            conn.commit()
+
+
+def run_artist_location_pipeline(engine: Engine) -> None:
+    """Many-to-many relationship table for artists and locations.
+
+    Args:
+        engine: Engine to connect to the database
+    """
+    artist_stmt = select(artist_table.c.id, artist_table.c.name)
+
+    with engine.connect() as conn:
+        res = conn.execute(artist_stmt)
+
+    artist_names = res.all()
+
+    for artist_id, artist_name in tqdm(artist_names):
+
+        # Get the location of that artist
+        loc_stmt = select(artist_table_init.c.location).where(
+            artist_table_init.c.name == artist_name
+        )
+
+        with engine.connect() as conn:
+            res = conn.execute(loc_stmt)
+
+        loc = list(set(res.all()))
+        loc_val = loc[0][0] if len(loc) == 1 else None
+
+        if loc_val is None:
+            continue
+
+        loc_id_stmt = select(location_table.c.id).where(location_table.c.name == loc_val)
+
+        with engine.connect() as conn:
+            res = conn.execute(loc_id_stmt)
+
+        location_id = res.scalar()
+
+        insert_stmt = artist_location_table.insert().values(
+            artist_id=artist_id, location_id=location_id
+        )
+
+        with engine.connect() as conn:
+            conn.execute(insert_stmt)
             conn.commit()
