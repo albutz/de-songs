@@ -198,9 +198,56 @@ def run_album_pipeline(engine: Engine) -> None:
     """
     stmt = text(
         """
-        INSERT INTO albums (title, artist)
-        SELECT DISTINCT album_name, artist_name
-        FROM songs_init
+        INSERT INTO albums_check (title, artist_key)
+        SELECT DISTINCT album_name, (SELECT id FROM artists AS a WHERE a.name = s.artist_name)
+        FROM songs_init AS s;
+        """
+    )
+
+    with engine.connect() as conn:
+        conn.execute(stmt)
+        conn.commit()
+
+
+def run_song_pipeline(engine: Engine) -> None:
+    """Insert into songs table.
+
+    Args:
+        engine: Engine to connect to the database
+    """
+    stmt = text(
+        """
+        INSERT INTO songs (
+            title,
+            year,
+            danceability,
+            duration,
+            end_of_fade_in,
+            start_of_fade_out,
+            loudness,
+            bpm,
+            album_key,
+            artist_key
+        )
+        SELECT title,
+            year,
+            danceability,
+            duration,
+            end_of_fade_in,
+            start_of_fade_out,
+            loudness,
+            bpm,
+            (
+                SELECT id
+                FROM albums AS a
+                WHERE (a.title = s.album_name) AND (a.artist = s.artist_name)
+            ),
+            (
+                SELECT id
+                FROM artists AS a
+                WHERE a.name = s.artist_name
+            )
+        FROM songs_init AS s
         """
     )
 

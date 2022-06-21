@@ -10,6 +10,7 @@ from etl import (
     run_artist_pipeline,
     run_initial_pipeline,
     run_location_pipeline,
+    run_song_pipeline,
 )
 from tables import metadata
 
@@ -70,7 +71,10 @@ if __name__ == "__main__":
         run_album_pipeline(engine)
         logging.info("Album table cleaned!")
 
-        # TODO: songs pipeline
+        # Songs pipeline
+        logging.info("Starting pipeline to clean songs table...")
+        run_song_pipeline(engine)
+        logging.info("Songs table cleaned!")
 
         # TODO: drop init tables
 

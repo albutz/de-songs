@@ -61,3 +61,19 @@ album_table = Table(
     Column("title", String, nullable=False),
     Column("artist", String, nullable=False),
 )
+
+song_table = Table(
+    "songs",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("title", String),
+    Column("year", Integer),
+    Column("danceability", Numeric),
+    Column("duration", Numeric),
+    Column("end_of_fade_in", Numeric),
+    Column("start_of_fade_out", Numeric),
+    Column("loudness", Numeric),
+    Column("bpm", Numeric),
+    Column("album_key", Integer, ForeignKey("albums.id")),
+    Column("artist_key", Integer, ForeignKey("artists.id")),
+)
