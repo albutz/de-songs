@@ -4,14 +4,7 @@ import logging
 from python_on_whales import docker
 from sqlalchemy import create_engine, inspect
 
-from etl import (
-    run_album_pipeline,
-    run_artist_location_pipeline,
-    run_artist_pipeline,
-    run_initial_pipeline,
-    run_location_pipeline,
-    run_song_pipeline,
-)
+from etl import run_etl_pipeline
 from tables import metadata
 
 logging.basicConfig(level=logging.INFO)
@@ -46,37 +39,7 @@ if __name__ == "__main__":
         else:
             logging.info("Schema already exists.")
 
-        # Initial pipeline
-        logging.info("Starting initial pipeline...")
-        run_initial_pipeline(engine)
-        logging.info("Initial ETL pipeline successfully run!")
-
-        # Artists pipeline
-        logging.info("Starting pipeline to clean artists table...")
-        run_artist_pipeline(engine)
-        logging.info("Artists table cleaned!")
-
-        # Locations pipeline
-        logging.info("Starting pipeline to clean locations table...")
-        run_location_pipeline(engine)
-        logging.info("Locations table cleaned!")
-
-        # Artist-location mapping
-        logging.info("Starting pipeline for many-to-many mapping of artists and locations.")
-        run_artist_location_pipeline(engine)
-        logging.info("Mapping table created!")
-
-        # Albums pipeline
-        logging.info("Starting pipeline to clean albums table...")
-        run_album_pipeline(engine)
-        logging.info("Album table cleaned!")
-
-        # Songs pipeline
-        logging.info("Starting pipeline to clean songs table...")
-        run_song_pipeline(engine)
-        logging.info("Songs table cleaned!")
-
-        # TODO: drop init tables
+        run_etl_pipeline(engine)
 
         engine.dispose()
 

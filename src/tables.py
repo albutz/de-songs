@@ -59,7 +59,7 @@ album_table = Table(
     metadata,
     Column("id", Integer, primary_key=True),
     Column("title", String, nullable=False),
-    Column("artist", String, nullable=False),
+    Column("artist_id", Integer, ForeignKey("artists.id")),
 )
 
 song_table = Table(
@@ -74,6 +74,6 @@ song_table = Table(
     Column("start_of_fade_out", Numeric),
     Column("loudness", Numeric),
     Column("bpm", Numeric),
-    Column("album_key", Integer, ForeignKey("albums.id")),
-    Column("artist_key", Integer, ForeignKey("artists.id")),
+    Column("album_id", Integer, ForeignKey("albums.id")),
+    Column("artist_id", Integer, ForeignKey("artists.id")),
 )

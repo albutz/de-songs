@@ -17,6 +17,24 @@ from tables import (
 from utils import cast_numeric, encode_str
 
 
+def run_etl_pipeline(engine: Engine) -> None:
+    """Complete ETL pipeline.
+
+    - Extract flat files, perform minimal transformations and load into intermediary tables
+    -
+
+    Args:
+        engine: _description_
+    """
+    run_initial_pipeline(engine)
+    run_artist_pipeline(engine)
+    run_location_pipeline(engine)
+    run_artist_location_pipeline(engine)
+    run_album_pipeline(engine)
+    run_song_pipeline(engine)
+    drop_init_tables(engine)
+
+
 def run_initial_pipeline(engine: Engine) -> None:
     """Initial ETL pipeline.
 
@@ -25,6 +43,8 @@ def run_initial_pipeline(engine: Engine) -> None:
     Args:
         engine: Engine to connect to the database
     """
+    logging.info("Starting initial pipeline...")
+
     file_paths = get_file_paths(Path("data"))
 
     for file_path in tqdm(file_paths):
@@ -74,6 +94,8 @@ def run_initial_pipeline(engine: Engine) -> None:
             conn.execute(insert_song_stmt)
             conn.commit()
 
+    logging.info("Initial ETL pipeline successfully run!")
+
 
 def run_artist_pipeline(engine: Engine) -> None:
     """Insert into artists table.
@@ -94,6 +116,8 @@ def run_artist_pipeline(engine: Engine) -> None:
         conn.execute(stmt)
         conn.commit()
 
+    logging.info("Artists table cleaned!")
+
 
 def run_location_pipeline(engine: Engine) -> None:
     """Locations table.
@@ -103,6 +127,8 @@ def run_location_pipeline(engine: Engine) -> None:
     Args:
         engine: Engine to connect to the database
     """
+    logging.info("Starting pipeline to clean locations table...")
+
     stmt = select(artist_table_init.c.location.distinct())
 
     with engine.connect() as conn:
@@ -145,6 +171,8 @@ def run_location_pipeline(engine: Engine) -> None:
             conn.execute(insert_loc_stmt)
             conn.commit()
 
+    logging.info("Locations table cleaned!")
+
 
 def run_artist_location_pipeline(engine: Engine) -> None:
     """Many-to-many relationship table for artists and locations.
@@ -152,6 +180,8 @@ def run_artist_location_pipeline(engine: Engine) -> None:
     Args:
         engine: Engine to connect to the database
     """
+    logging.info("Starting pipeline for many-to-many mapping of artists and locations.")
+
     artist_stmt = select(artist_table.c.id, artist_table.c.name)
 
     with engine.connect() as conn:
@@ -190,6 +220,8 @@ def run_artist_location_pipeline(engine: Engine) -> None:
             conn.execute(insert_stmt)
             conn.commit()
 
+    logging.info("Mapping table finished!")
+
 
 def run_album_pipeline(engine: Engine) -> None:
     """Insert into albums table.
@@ -197,9 +229,11 @@ def run_album_pipeline(engine: Engine) -> None:
     Args:
         engine: Engine to connect to the database
     """
+    logging.info("Starting pipeline to clean albums table...")
+
     stmt = text(
         """
-        INSERT INTO albums_check (title, artist_key)
+        INSERT INTO albums (title, artist_id)
         SELECT DISTINCT album_name, (SELECT id FROM artists AS a WHERE a.name = s.artist_name)
         FROM songs_init AS s;
         """
@@ -208,6 +242,8 @@ def run_album_pipeline(engine: Engine) -> None:
     with engine.connect() as conn:
         conn.execute(stmt)
         conn.commit()
+
+    logging.info("Album table cleaned!")
 
 
 def run_song_pipeline(engine: Engine) -> None:
@@ -227,10 +263,11 @@ def run_song_pipeline(engine: Engine) -> None:
             start_of_fade_out,
             loudness,
             bpm,
-            album_key,
-            artist_key
+            album_id,
+            artist_id
         )
-        SELECT title,
+        SELECT
+            title,
             year,
             danceability,
             duration,
@@ -240,13 +277,15 @@ def run_song_pipeline(engine: Engine) -> None:
             bpm,
             (
                 SELECT id
-                FROM albums AS a
-                WHERE (a.title = s.album_name) AND (a.artist = s.artist_name)
+                FROM albums
+                WHERE (albums.title = s.album_name) AND (
+                    (SELECT name FROM artists WHERE artists.id = albums.artist_id) = s.artist_name
+                )
             ),
             (
                 SELECT id
-                FROM artists AS a
-                WHERE a.name = s.artist_name
+                FROM artists
+                WHERE artists.name = s.artist_name
             )
         FROM songs_init AS s
         """
@@ -255,6 +294,8 @@ def run_song_pipeline(engine: Engine) -> None:
     with engine.connect() as conn:
         conn.execute(stmt)
         conn.commit()
+
+    logging.info("Songs table cleaned!")
 
 
 def drop_init_tables(engine: Engine) -> None:
