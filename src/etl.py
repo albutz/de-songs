@@ -1,4 +1,5 @@
 """ETL pipeline."""
+import logging
 from pathlib import Path
 
 from sqlalchemy import Column, select, text
@@ -254,3 +255,19 @@ def run_song_pipeline(engine: Engine) -> None:
     with engine.connect() as conn:
         conn.execute(stmt)
         conn.commit()
+
+
+def drop_init_tables(engine: Engine) -> None:
+    """Drop initial songs and artists tables.
+
+    Args:
+        engine: Engine to connect to the database
+    """
+    stmts = [text(f"DROP TABLE {tbl}") for tbl in ["songs_init", "artists_init"]]
+
+    for stmt in stmts:
+        with engine.connect() as conn:
+            conn.execute(stmt)
+            conn.commit()
+
+    logging.info("Initial tables dropped.")
