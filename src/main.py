@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 if __name__ == "__main__":
 
     engine = create_engine(
-        "postgresql+psycopg2://postgres:postgres@localhost:6543/sparkifydb", future=True
+        "postgresql+psycopg2://postgres:postgres@sparkify/sparkifydb", future=True
     )
 
     logging.info("Engine created.")
