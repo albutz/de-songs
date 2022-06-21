@@ -7,7 +7,6 @@ authors = ["Alexander Butz <alex.butz@gmail.com>"]
 [tool.poetry.dependencies]
 python = "^3.10"
 psycopg2 = "^2.9.3"
-python-on-whales = "^0.46.0"
 SQLAlchemy = "^1.4.37"
 pandas = "^1.4.2"
 tables = "^3.7.0"
