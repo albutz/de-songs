@@ -1,7 +1,7 @@
 """ETL pipeline."""
 from pathlib import Path
 
-from sqlalchemy import Column, select
+from sqlalchemy import Column, select, text
 from sqlalchemy.future.engine import Engine
 from tqdm import tqdm
 
@@ -80,19 +80,18 @@ def run_artist_pipeline(engine: Engine) -> None:
     Args:
         engine: Engine to connect to the database
     """
-    stmt = select(artist_table_init.c.name.distinct())
+    stmt = text(
+        """
+        INSERT INTO artists (name)
+        SELECT DISTINCT name
+        FROM artists_init
+        WHERE name IS NOT NULL;
+        """
+    )
 
     with engine.connect() as conn:
-        res = conn.execute(stmt)
-
-    artist_names = [row[0] for row in res.all()]
-
-    for artist_name in tqdm(artist_names):
-        insert_artist_stmt = artist_table.insert().values(name=artist_name)
-
-        with engine.connect() as conn:
-            conn.execute(insert_artist_stmt)
-            conn.commit()
+        conn.execute(stmt)
+        conn.commit()
 
 
 def run_location_pipeline(engine: Engine) -> None:
