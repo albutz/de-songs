@@ -53,3 +53,11 @@ song_table_init = Table(
     Column("album_name", String),
     Column("artist_name", String),
 )
+
+album_table = Table(
+    "albums",
+    metadata,
+    Column("id", Integer, primary_key=True),
+    Column("title", String, nullable=False),
+    Column("artist", String, nullable=False),
+)

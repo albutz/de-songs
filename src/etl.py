@@ -75,7 +75,7 @@ def run_initial_pipeline(engine: Engine) -> None:
 
 
 def run_artist_pipeline(engine: Engine) -> None:
-    """Transform artists table.
+    """Insert into artists table.
 
     Args:
         engine: Engine to connect to the database
@@ -188,3 +188,22 @@ def run_artist_location_pipeline(engine: Engine) -> None:
         with engine.connect() as conn:
             conn.execute(insert_stmt)
             conn.commit()
+
+
+def run_album_pipeline(engine: Engine) -> None:
+    """Insert into albums table.
+
+    Args:
+        engine: Engine to connect to the database
+    """
+    stmt = text(
+        """
+        INSERT INTO albums (title, artist)
+        SELECT DISTINCT album_name, artist_name
+        FROM songs_init
+        """
+    )
+
+    with engine.connect() as conn:
+        conn.execute(stmt)
+        conn.commit()

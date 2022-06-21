@@ -5,6 +5,7 @@ from python_on_whales import docker
 from sqlalchemy import create_engine, inspect
 
 from etl import (
+    run_album_pipeline,
     run_artist_location_pipeline,
     run_artist_pipeline,
     run_initial_pipeline,
@@ -28,7 +29,15 @@ if __name__ == "__main__":
 
         # Create schema if necessary
         inspector = inspect(engine)
-        tbls = ["artists_init", "artists", "songs_init", "songs", "locations", "artists_locations"]
+        tbls = [
+            "artists_init",
+            "artists",
+            "songs_init",
+            "songs",
+            "locations",
+            "artists_locations",
+            "albums",
+        ]
         if not all([tbl in inspector.get_table_names() for tbl in tbls]):
             with engine.begin() as conn:
                 metadata.create_all(conn)
@@ -55,6 +64,15 @@ if __name__ == "__main__":
         logging.info("Starting pipeline for many-to-many mapping of artists and locations.")
         run_artist_location_pipeline(engine)
         logging.info("Mapping table created!")
+
+        # Albums pipeline
+        logging.info("Starting pipeline to clean albums table...")
+        run_album_pipeline(engine)
+        logging.info("Album table cleaned!")
+
+        # TODO: songs pipeline
+
+        # TODO: drop init tables
 
         engine.dispose()
 
