@@ -21,10 +21,14 @@ def run_etl_pipeline(engine: Engine) -> None:
     """Complete ETL pipeline.
 
     - Extract flat files, perform minimal transformations and load into intermediary tables
-    -
+    - Insert into artists table
+    - Insert into locations table
+    - Create many-to-many mapping for artists and locations
+    - Insert into songs table
+    - Drop intermediary tables
 
     Args:
-        engine: _description_
+        engine: Engine to connect to the database
     """
     run_initial_pipeline(engine)
     run_artist_pipeline(engine)
