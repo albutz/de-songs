@@ -51,12 +51,6 @@ if __name__ == "__main__":
 
     etl_pipeline = Pipeline(engine, tables)
 
-    etl_pipeline.run_initial_pipeline()
-    etl_pipeline.run_artist_pipeline()
-    etl_pipeline.run_location_pipeline()
-    etl_pipeline.run_artist_location_pipeline()
-    etl_pipeline.run_album_pipeline()
-    etl_pipeline.run_song_pipeline()
-    etl_pipeline.drop_init_tables()
+    etl_pipeline.run()
 
     engine.dispose()

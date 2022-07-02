@@ -46,6 +46,24 @@ class Pipeline:
             conn.execute(stmt)
             conn.commit()
 
+    def run(self) -> None:
+        """Complete ETL pipeline.
+
+        - Extract flat files, perform minimal transformations and load into intermediary tables
+        - Insert into artists table
+        - Insert into locations table
+        - Create many-to-many mapping for artists and locations
+        - Insert into songs table
+        - Drop intermediary tables
+        """
+        self.run_initial_pipeline()
+        self.run_artist_pipeline()
+        self.run_location_pipeline()
+        self.run_artist_location_pipeline()
+        self.run_album_pipeline()
+        self.run_song_pipeline()
+        self.drop_init_tables()
+
     def run_initial_pipeline(self) -> None:
         """Initial ETL pipeline.
 
