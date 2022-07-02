@@ -1,0 +1,3 @@
+# Exclude pycache from copying
+**/__pycache__
+*.pyc

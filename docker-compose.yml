@@ -7,7 +7,21 @@ services:
       POSTGRES_DB: sparkifydb
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
+      # user for healthcheck
+      PGUSER: postgres
+    # check that database is ready
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
     ports:
-      - 6543:5432 ## 5432:5432 does not work! 
+      - 5432:5432
+  pipeline:
+    build: .
     volumes:
-      - ./database:/var/lib/postgresql/data
+      - ./data:/pipeline/data
+    depends_on:
+      db:
+        # wait for database to be ready
+        condition: service_healthy

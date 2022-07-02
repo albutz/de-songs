@@ -4,7 +4,6 @@ from pathlib import Path
 
 from sqlalchemy import Column, select, text
 from sqlalchemy.future.engine import Engine
-from tqdm import tqdm
 
 from read import get_file_paths, read_h5
 from utils import cast_numeric, encode_str
@@ -32,7 +31,7 @@ class Pipeline:
 
         file_paths = get_file_paths(Path("data"))
 
-        for file_path in tqdm(file_paths):
+        for file_path in file_paths:
 
             # Load individual file
             song_df = read_h5(file_path)
@@ -130,7 +129,7 @@ class Pipeline:
 
             return insert_val
 
-        for location in tqdm(locations):
+        for location in locations:
 
             if location is None:
                 continue
@@ -159,7 +158,7 @@ class Pipeline:
 
         artist_names = res.all()
 
-        for artist_id, artist_name in tqdm(artist_names):
+        for artist_id, artist_name in artist_names:
 
             # Get the location of that artist
             loc_stmt = select(self.tables["artists_init"].c.location).where(
