@@ -3,6 +3,7 @@ import logging
 from pathlib import Path
 
 from sqlalchemy import Column, select, text
+from sqlalchemy.engine import Result
 from sqlalchemy.future.engine import Engine
 
 from read import get_file_paths, read_h5
@@ -21,6 +22,29 @@ class Pipeline:
         """
         self.engine = engine
         self.tables = tables
+
+    def _execute(self, stmt: str | text) -> Result:
+        """Run a query.
+
+        Args:
+            stmt: Query to run.
+
+        Returns:
+            Result of the query.
+        """
+        with self.engine.connect() as conn:
+            res = conn.execute(stmt)
+        return res
+
+    def _commit(self, stmt: str | text) -> None:
+        """Run a query and commit it.
+
+        Args:
+            stmt: Query to run.
+        """
+        with self.engine.connect() as conn:
+            conn.execute(stmt)
+            conn.commit()
 
     def run_initial_pipeline(self) -> None:
         """Initial ETL pipeline.
@@ -50,9 +74,7 @@ class Pipeline:
             )
             # fmt: on
 
-            with self.engine.connect() as conn:
-                conn.execute(insert_artist_stmt)
-                conn.commit()
+            self._commit(insert_artist_stmt)
 
             # Insert song
             # fmt:off
@@ -74,9 +96,7 @@ class Pipeline:
             )
             # fmt: on
 
-            with self.engine.connect() as conn:
-                conn.execute(insert_song_stmt)
-                conn.commit()
+            self._commit(insert_song_stmt)
 
         logging.info("Initial ETL pipeline successfully run!")
 
@@ -91,9 +111,7 @@ class Pipeline:
             """
         )
 
-        with self.engine.connect() as conn:
-            conn.execute(stmt)
-            conn.commit()
+        self._commit(stmt)
 
         logging.info("Artists table cleaned!")
 
@@ -103,8 +121,7 @@ class Pipeline:
 
         stmt = select(self.tables["artists_init"].c.location.distinct())
 
-        with self.engine.connect() as conn:
-            res = conn.execute(stmt)
+        res = self._execute(stmt)
 
         locations = [row[0] for row in res.all()]
 
@@ -120,8 +137,7 @@ class Pipeline:
             """
             stmt = select(col).where(self.tables["artists_init"].c.location == location)
 
-            with self.engine.connect() as conn:
-                res = conn.execute(stmt)
+            res = self._execute(stmt)
 
             val = [row[0] for row in res.all()]
             val = list(set(val))
@@ -138,23 +154,24 @@ class Pipeline:
             lng = get_lng_lat_val(self.tables["artists_init"].c.longitude, location)
 
             insert_loc_stmt = (
-                self.tables["locations"].insert().values(name=location, latitude=lat, longitude=lng)
+                self.tables["locations"]
+                .insert()
+                .values(name=location, latitude=lat, longitude=lng)
             )
 
-            with self.engine.connect() as conn:
-                conn.execute(insert_loc_stmt)
-                conn.commit()
+            self._commit(insert_loc_stmt)
 
         logging.info("Locations table cleaned!")
 
     def run_artist_location_pipeline(self) -> None:
         """Many-to-many relationship table for artists and locations."""
-        logging.info("Starting pipeline for many-to-many mapping of artists and locations.")
+        logging.info(
+            "Starting pipeline for many-to-many mapping of artists and locations."
+        )
 
         artist_stmt = select(self.tables["artists"].c.id, self.tables["artists"].c.name)
 
-        with self.engine.connect() as conn:
-            res = conn.execute(artist_stmt)
+        res = self._execute(artist_stmt)
 
         artist_names = res.all()
 
@@ -165,8 +182,7 @@ class Pipeline:
                 self.tables["artists_init"].c.name == artist_name
             )
 
-            with self.engine.connect() as conn:
-                res = conn.execute(loc_stmt)
+            self._execute(loc_stmt)
 
             loc = list(set(res.all()))
             loc_val = loc[0][0] if len(loc) == 1 else None
@@ -178,8 +194,7 @@ class Pipeline:
                 self.tables["locations"].c.name == loc_val
             )
 
-            with self.engine.connect() as conn:
-                res = conn.execute(loc_id_stmt)
+            self._execute(loc_id_stmt)
 
             location_id = res.scalar()
 
@@ -189,9 +204,7 @@ class Pipeline:
                 .values(artist_id=artist_id, location_id=location_id)
             )
 
-            with self.engine.connect() as conn:
-                conn.execute(insert_stmt)
-                conn.commit()
+            self._commit(insert_stmt)
 
         logging.info("Mapping table finished!")
 
@@ -207,9 +220,7 @@ class Pipeline:
             """
         )
 
-        with self.engine.connect() as conn:
-            conn.execute(stmt)
-            conn.commit()
+        self._commit(stmt)
 
         logging.info("Album table cleaned!")
 
@@ -255,20 +266,18 @@ class Pipeline:
             """
         )
 
-        with self.engine.connect() as conn:
-            conn.execute(stmt)
-            conn.commit()
+        self._commit(stmt)
 
         logging.info("Songs table cleaned!")
 
     def drop_init_tables(self) -> None:
         """Drop initial tables."""
-        init_tables = [tbl_name for tbl_name in self.tables.keys() if "init" in tbl_name]
+        init_tables = [
+            tbl_name for tbl_name in self.tables.keys() if "init" in tbl_name
+        ]
         stmts = [text(f"DROP TABLE {tbl}") for tbl in init_tables]
 
         for stmt in stmts:
-            with self.engine.connect() as conn:
-                conn.execute(stmt)
-                conn.commit()
+            self._commit(stmt)
 
         logging.info("Initial tables dropped.")
