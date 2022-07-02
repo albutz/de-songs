@@ -4,8 +4,15 @@ import logging
 from python_on_whales import docker
 from sqlalchemy import create_engine, inspect
 
-from etl import run_etl_pipeline
-from tables import metadata
+from etl import Pipeline
+from tables import (
+    artist_location_table,
+    artist_table,
+    artist_table_init,
+    location_table,
+    metadata,
+    song_table_init,
+)
 
 logging.basicConfig(level=logging.INFO)
 
@@ -39,7 +46,23 @@ if __name__ == "__main__":
         else:
             logging.info("Schema already exists.")
 
-        run_etl_pipeline(engine)
+        tables = {
+            "artists_init": artist_table_init,
+            "songs_init": song_table_init,
+            "locations": location_table,
+            "artists": artist_table,
+            "artists_locations": artist_location_table,
+        }
+
+        etl_pipeline = Pipeline(engine, tables)
+
+        etl_pipeline.run_initial_pipeline()
+        etl_pipeline.run_artist_pipeline()
+        etl_pipeline.run_location_pipeline()
+        etl_pipeline.run_artist_location_pipeline()
+        etl_pipeline.run_album_pipeline()
+        etl_pipeline.run_song_pipeline()
+        etl_pipeline.drop_init_tables()
 
         engine.dispose()
 
